@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -13,27 +12,30 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 )
 
-// Service defines the interface for health checks.
-type Service interface {
+// Database interface defines the required database operations.
+type Database interface {
 	Health() map[string]string
 	Close() error
+	RegisterUser(username, password string) error
+	GetPassword(username string) (string, error)
 }
 
-// service implements the Service interface.
+// service is the concrete implementation of the Database interface.
 type service struct {
 	Session *gocql.Session
 }
 
 // Environment variables for ScyllaDB connection.
 var (
-	hosts            = os.Getenv("BLUEPRINT_DB_HOSTS")       // Comma-separated list of hosts:port
-	username         = os.Getenv("BLUEPRINT_DB_USERNAME")    // Username for authentication
-	password         = os.Getenv("BLUEPRINT_DB_PASSWORD")    // Password for authentication
+	hosts            = os.Getenv("BLUEPRINT_DB_HOSTS")       // Comma-separated list of hosts
+	username         = os.Getenv("BLUEPRINT_DB_USERNAME")    // Database username
+	password         = os.Getenv("BLUEPRINT_DB_PASSWORD")    // Database password
 	consistencyLevel = os.Getenv("BLUEPRINT_DB_CONSISTENCY") // Consistency level
+	keyspace         = os.Getenv("BLUEPRINT_DB_KEYSPACE")    // Keyspace name
 )
 
-// New initializes a new Service with a ScyllaDB Session.
-func New() Service {
+// New initializes a new Database service with a ScyllaDB session.
+func New() Database {
 	cluster := gocql.NewCluster(strings.Split(hosts, ",")...)
 	cluster.PoolConfig.HostSelectionPolicy = gocql.TokenAwareHostPolicy(gocql.RoundRobinHostPolicy())
 
@@ -45,26 +47,45 @@ func New() Service {
 		}
 	}
 
-	// Set consistency level if provided
+	// Set consistency level if specified
 	if consistencyLevel != "" {
 		if cl, err := parseConsistency(consistencyLevel); err == nil {
 			cluster.Consistency = cl
 		} else {
-			log.Printf("Invalid SCYLLA_DB_CONSISTENCY '%s', using default: %v", consistencyLevel, err)
+			log.Printf("Invalid consistency level '%s', using default. Error: %v", consistencyLevel, err)
 		}
 	}
 
-	// Create Session
+	// Create a session for the system keyspace to perform admin tasks
+	cluster.Keyspace = "system"
 	session, err := cluster.CreateSession()
 	if err != nil {
 		log.Fatalf("Failed to connect to ScyllaDB cluster: %v", err)
 	}
+	defer session.Close()
 
-	s := &service{Session: session}
-	return s
+	// Ensure the keyspace exists
+	if err := ensureKeyspaceExists(session, keyspace); err != nil {
+		log.Fatalf("Failed to initialize keyspace: %v", err)
+	}
+
+	// Configure a new session for the application keyspace
+	cluster.Keyspace = keyspace
+	cluster.PoolConfig.HostSelectionPolicy = gocql.TokenAwareHostPolicy(gocql.RoundRobinHostPolicy())
+	appSession, err := cluster.CreateSession()
+	if err != nil {
+		log.Fatalf("Failed to connect to keyspace '%s': %v", keyspace, err)
+	}
+
+	// Ensure required tables exist
+	if err := createTables(appSession); err != nil {
+		log.Fatalf("Failed to initialize database schema: %v", err)
+	}
+
+	return &service{Session: appSession}
 }
 
-// parseConsistency converts a string to a gocql.Consistency value.
+// parseConsistency converts a consistency level string to a gocql.Consistency value.
 func parseConsistency(cons string) (gocql.Consistency, error) {
 	consistencyMap := map[string]gocql.Consistency{
 		"ANY":          gocql.Any,
@@ -78,87 +99,93 @@ func parseConsistency(cons string) (gocql.Consistency, error) {
 		"EACH_QUORUM":  gocql.EachQuorum,
 	}
 
-	if consistency, ok := consistencyMap[strings.ToUpper(cons)]; ok {
-		return consistency, nil
+	consistency, ok := consistencyMap[strings.ToUpper(cons)]
+	if !ok {
+		return gocql.LocalQuorum, fmt.Errorf("unknown consistency level: %s", cons)
 	}
-	return gocql.LocalQuorum, fmt.Errorf("unknown consistency level: %s", cons)
+	return consistency, nil
 }
 
-// Health returns the health status and statistics of the ScyllaDB cluster.
+// createTables ensures that required tables exist in the database.
+func createTables(session *gocql.Session) error {
+	createUsersTableQuery := `
+		CREATE TABLE IF NOT EXISTS users (
+			username TEXT PRIMARY KEY,
+			password TEXT
+		);
+	`
+
+	if err := session.Query(createUsersTableQuery).Exec(); err != nil {
+		return fmt.Errorf("failed to create 'users' table: %v", err)
+	}
+
+	return nil
+}
+
+// Health checks the database connection and returns its status.
 func (s *service) Health() map[string]string {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	stats := make(map[string]string)
-
-	// Check ScyllaDB health and populate the stats map
+	stats := map[string]string{}
 	startedAt := time.Now()
 
 	// Execute a simple query to check connectivity
 	query := "SELECT now() FROM system.local"
-	iter := s.Session.Query(query).WithContext(ctx).Iter()
 	var currentTime time.Time
-	if !iter.Scan(&currentTime) {
-		if err := iter.Close(); err != nil {
-			stats["status"] = "down"
-			stats["message"] = fmt.Sprintf("Failed to execute query: %v", err)
-			return stats
-		}
-	}
-	if err := iter.Close(); err != nil {
+	if err := s.Session.Query(query).WithContext(ctx).Scan(&currentTime); err != nil {
 		stats["status"] = "down"
-		stats["message"] = fmt.Sprintf("Error during query execution: %v", err)
+		stats["message"] = fmt.Sprintf("Health check failed: %v", err)
 		return stats
 	}
 
-	// ScyllaDB is up
 	stats["status"] = "up"
-	stats["message"] = "It's healthy"
+	stats["message"] = "Database is healthy"
 	stats["scylla_current_time"] = currentTime.String()
-
-	// Retrieve cluster information
-	// Get keyspace information
-	getKeyspacesQuery := "SELECT keyspace_name FROM system_schema.keyspaces"
-	keyspacesIterator := s.Session.Query(getKeyspacesQuery).Iter()
-
-	stats["scylla_keyspaces"] = strconv.Itoa(keyspacesIterator.NumRows())
-	if err := keyspacesIterator.Close(); err != nil {
-		log.Fatalf("Failed to close keyspaces iterator: %v", err)
-	}
-
-	// Get cluster information
-	var currentDatacenter string
-	var currentHostStatus bool
-
-	var clusterNodesUp uint
-	var clusterNodesDown uint
-	var clusterSize uint
-
-	clusterNodesIterator := s.Session.Query("SELECT dc, up FROM system.cluster_status").Iter()
-	for clusterNodesIterator.Scan(&currentDatacenter, &currentHostStatus) {
-		clusterSize++
-		if currentHostStatus {
-			clusterNodesUp++
-		} else {
-			clusterNodesDown++
-		}
-	}
-
-	if err := clusterNodesIterator.Close(); err != nil {
-		log.Fatalf("Failed to close cluster nodes iterator: %v", err)
-	}
-
-	stats["scylla_cluster_size"] = strconv.Itoa(int(clusterSize))
-	stats["scylla_cluster_nodes_up"] = strconv.Itoa(int(clusterNodesUp))
-	stats["scylla_cluster_nodes_down"] = strconv.Itoa(int(clusterNodesDown))
-	stats["scylla_current_datacenter"] = currentDatacenter
-
-	// Calculate the time taken to perform the health check
-	stats["scylla_health_check_duration"] = time.Since(startedAt).String()
+	stats["health_check_duration"] = time.Since(startedAt).String()
 	return stats
 }
 
-// Close gracefully closes the ScyllaDB Session.
+func ensureKeyspaceExists(session *gocql.Session, keyspace string) error {
+	if keyspace == "" {
+		return fmt.Errorf("keyspace is not specified in 'BLUEPRINT_DB_KEYSPACE'")
+	}
+
+	createKeyspaceQuery := fmt.Sprintf(`
+		CREATE KEYSPACE IF NOT EXISTS %s
+		WITH replication = {
+			'class': 'SimpleStrategy',
+			'replication_factor': 3
+		};
+	`, keyspace)
+
+	if err := session.Query(createKeyspaceQuery).Exec(); err != nil {
+		return fmt.Errorf("failed to create keyspace '%s': %v", keyspace, err)
+	}
+	return nil
+}
+
+func (s *service) RegisterUser(username, password string) error {
+	query := "INSERT INTO users (username, password) VALUES (?, ?)"
+	if err := s.Session.Query(query, username, password).Exec(); err != nil {
+		return fmt.Errorf("failed to register user '%s': %v", username, err)
+	}
+	return nil
+}
+
+func (s *service) GetPassword(username string) (string, error) {
+	var password string
+	query := "SELECT password FROM users WHERE username = ?"
+	if err := s.Session.Query(query, username).Scan(&password); err != nil {
+		if err == gocql.ErrNotFound {
+			return "", fmt.Errorf("user '%s' not found", username)
+		}
+		return "", fmt.Errorf("failed to fetch password for user '%s': %v", username, err)
+	}
+	return password, nil
+}
+
+// Close terminates the database session.
 func (s *service) Close() error {
 	s.Session.Close()
 	return nil
