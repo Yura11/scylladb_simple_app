@@ -1,4 +1,14 @@
 services:
+  scylla_app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+    - "10000:10000"
+    env_file:
+      - .env
+
   scylla_bp:
     image: scylladb/scylla:6.2
     restart: unless-stopped
@@ -6,7 +16,7 @@ services:
       - --smp=2
       - --memory=1GB
       - --overprovisioned=1
-      - --developer-mode=1 # Disable for production
+      - --developer-mode=1
       - --seeds=scylla_bp
     ports:
       - "9042:9042"
