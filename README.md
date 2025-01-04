@@ -1,0 +1,1 @@
+# scylladb_simple_app
