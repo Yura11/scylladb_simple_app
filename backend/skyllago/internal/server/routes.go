@@ -103,8 +103,6 @@ func (s *Server) registerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if err != nil && err.Error() != "user not found" { // Handle database errors
 		log.Printf("Error checking user existence: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
 	}
 
 	// Hash the password
