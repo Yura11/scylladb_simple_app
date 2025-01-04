@@ -1,0 +1,17 @@
+services:
+  scylla_bp:
+    image: scylladb/scylla:6.2
+    restart: unless-stopped
+    command:
+      - --smp=2
+      - --memory=1GB
+      - --overprovisioned=1
+      - --developer-mode=1 # Disable for production
+      - --seeds=scylla_bp
+    ports:
+      - "9042:9042"
+      - "19042:19042"
+    volumes:
+      - scylla_bp:/var/lib/scylla
+volumes:
+  scylla_bp:
