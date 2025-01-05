@@ -4,6 +4,8 @@ import { loginUser } from "../services/authService";
 import { AuthContext } from "../context/AuthContext";
 import InputField from "../components/InputField";
 import Button from "../components/Button";
+import styles from '../styles/login.module.css'; 
+import loginImage from "../assets/login.webp";
 
 const Login = () => {
   const [credentials, setCredentials] = useState({ email: "", password: "" });
@@ -28,31 +30,40 @@ const Login = () => {
   };
 
   return (
-    <div className="login-page">
-      <h2>Login</h2>
-      {error && <p className="error">{error}</p>}
-      <form onSubmit={handleSubmit}>
-        <InputField
-          label="Username"
-          type="username"
-          name="username"
-          value={credentials.email}
-          onChange={handleChange}
-        />
-        <InputField
-          label="Password"
-          type="password"
-          name="password"
-          value={credentials.password}
-          onChange={handleChange}
-        />
-        <Button type="submit" text="Login" />
-      </form>
-      <p>
-        Don't have an account? <a href="/register">Register here</a>
-      </p>
+    <div className={styles.loginPage}>
+      <div className={styles.imageContainer}>
+        <img src={loginImage} alt="Login Illustration" className={styles.image} />
+      </div>
+      <div className={styles.formContainer}>
+        <h2 className={styles.heading}>Login</h2>
+        {error && <p className={styles.error}>{error}</p>}
+        <form onSubmit={handleSubmit} className={styles.form}>
+          <InputField
+            label="Username"
+            type="text"
+            name="username"
+            value={credentials.email}
+            onChange={handleChange}
+          />
+          <InputField
+            label="Password"
+            type="password"
+            name="password"
+            value={credentials.password}
+            onChange={handleChange}
+          />
+          <Button type="submit" text="Login" className={styles.button} />
+        </form>
+        <p className={styles.redirectText}>
+          Don't have an account?{" "}
+          <a href="/register" className={styles.redirectLink}>
+            Register here
+          </a>
+        </p>
+      </div>
     </div>
   );
 };
 
 export default Login;
+

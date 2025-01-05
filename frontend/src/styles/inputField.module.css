@@ -2,21 +2,23 @@
 .input-group {
     display: flex;
     flex-direction: column;
+    width: 100%;
     margin-bottom: 20px;
   }
   
   .input-group label {
     font-size: 1rem;
     color: #333;
-    margin-bottom: 8px;
+    margin-bottom: 0.1rem;
   }
   
   .input-group input {
+    display: flex;
+    align-items: center;
     padding: 12px;
     font-size: 1rem;
     border: 1px solid #ddd;
     border-radius: 4px;
-    width: 70%;
     transition: border 0.3s ease;
   }
   
@@ -25,7 +27,4 @@
     outline: none;
   }
   
-  .input-group input:invalid {
-    border-color: red;
-  }
   

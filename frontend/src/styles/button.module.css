@@ -1,6 +1,6 @@
 /* Button styles */
 button {
-    background-color: #007bff;
+    background-color: #10355c;
     color: white;
     padding: 12px;
     font-size: 1rem;
@@ -13,7 +13,7 @@ button {
   }
   
   button:hover {
-    background-color: #0056b3;
+    background-color: #121f2d;
   }
   
   button:disabled {
