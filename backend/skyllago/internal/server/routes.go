@@ -101,11 +101,6 @@ func (s *Server) registerHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "User already exists", http.StatusConflict) // 409 Conflict
 		return
 	}
-	if err != nil && err.Error() != "user not found" { // Handle database errors
-		log.Printf("Error checking user existence: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
 
 	// Hash the password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
