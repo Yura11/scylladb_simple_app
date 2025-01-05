@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL ;
-console.log("API_URL:", API_URL); // Should log the value from .env
+console.log("API_URL:", API_URL);
 
 // Register user
 export const registerUser = async (userData) => {

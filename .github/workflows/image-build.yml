@@ -32,7 +32,7 @@ jobs:
       matrix:
         include:
         - image: "frontend"
-          context: "frontend"
+          context: "frontend/react_js"
         - image: "backend"
           context: "backend/skyllago"
 

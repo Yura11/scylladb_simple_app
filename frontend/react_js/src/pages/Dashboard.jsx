@@ -6,18 +6,17 @@ const Dashboard = () => {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    // Get JWT token from localStorage
     const token = localStorage.getItem("jwt_token");
 
     if (token) {
       axios
         .get("http://localhost:10000/protected", {
           headers: {
-            Authorization: `Bearer ${token}`, // Pass token as Authorization header
+            Authorization: `Bearer ${token}`, 
           },
         })
         .then((response) => {
-          setResponseData(response.data); // Store the response data
+          setResponseData(response.data); 
         })
         .catch((err) => {
           setError(err.response?.data?.message || "Error fetching data.");
