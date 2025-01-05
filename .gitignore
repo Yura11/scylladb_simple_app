@@ -8,6 +8,7 @@
 *.so
 *.dylib
 *vendor
+*terragrunt-cache
 # Test binary, built with `go test -c`
 *.test
 
