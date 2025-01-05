@@ -2,7 +2,7 @@ version: '3.8'
 services:
   frontend:
     build:
-      context: .
+      context: frontend/Dockerfile
       dockerfile: frontend/Dockerfile
     ports:
       - '4173:80'
@@ -11,7 +11,7 @@ services:
       
   scylla_app:
     build:
-      context: .
+      context: backend/skyllago/Dockerfile
       dockerfile: backend/skyllago/Dockerfile
     restart: unless-stopped
     ports:
