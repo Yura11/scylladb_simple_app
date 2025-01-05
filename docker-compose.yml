@@ -4,9 +4,9 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: ./frontend/Dockerfile
+      dockerfile: ./Dockerfile
     ports:
-      - "4173:80"
+      - "4173:80" # Map host port 4173 to container port 80
     labels:
       - "com.example.project=front"
     networks:
@@ -17,8 +17,7 @@ services:
   scylla_app:
     build:
       context: ./backend/skyllago
-      dockerfile: ./backend/skyllago/Dockerfile
-    restart: unless-stopped
+      dockerfile: ./Dockerfile
     ports:
       - "10000:10000"
     env_file:
@@ -30,13 +29,6 @@ services:
 
   scylla_bp:
     image: scylladb/scylla:6.2
-    restart: unless-stopped
-    command:
-      - --smp=2
-      - --memory=1GB
-      - --overprovisioned=1
-      - --developer-mode=1
-      - --seeds=scylla_bp
     ports:
       - "9042:9042"
       - "19042:19042"
