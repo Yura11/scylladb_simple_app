@@ -4,7 +4,7 @@ FROM ${base_image} as builder
 
 WORKDIR /app
 
-COPY .env go.mod go.sum ./
+COPY .env_example go.mod go.sum ./
 
 RUN go mod download
 
