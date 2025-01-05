@@ -1,0 +1,10 @@
+vpc_cidr: "10.0.0.0/16"
+public_subnets:
+  - "10.0.1.0/24"
+  - "10.0.2.0/24"
+ami_id: "ami-12345678"
+instance_type: "t2.micro"
+tags:
+  environment: "stage"
+subnet_id: "subnet-05f28f4150e6ec006"
+vpc_id: "vpc-0a13c0c454138d384"

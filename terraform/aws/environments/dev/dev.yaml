@@ -1,0 +1,10 @@
+vpc_cidr: "10.0.0.0/16"
+public_subnets:
+  - "10.0.1.0/24"
+  - "10.0.2.0/24"
+ami_id: "ami-0e54671bdf3c8ed8d"
+instance_type: "t2.micro"
+tags:
+  environment: "dev"
+subnet_id: "subnet-0d203d829bc6ccce4"
+vpc_id: "vpc-099396b6133ba87b6"
