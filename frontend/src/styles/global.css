@@ -1,6 +1,10 @@
 body {
+    display: flex;
+    justify-content: center; /* Горизонтальне вирівнювання */
+    align-items: center;    /* Вертикальне вирівнювання, якщо потрібно */
+    min-height: 100vh; 
     font-family: Arial, sans-serif;
-    background: linear-gradient(#2A00B7, #42006c);
+    background-color: #6e6060;
   }
   
 
