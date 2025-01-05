@@ -41,7 +41,7 @@ const Login = () => {
           <InputField
             label="Username"
             type="text"
-            name="username"
+            name="email"
             value={credentials.email}
             onChange={handleChange}
           />
