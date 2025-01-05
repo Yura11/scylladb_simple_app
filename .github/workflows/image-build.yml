@@ -61,8 +61,8 @@ jobs:
         with:
           context: backend/skyllago
           push: ${{ github.event_name != 'pull_request' }}
-          tags: backend-${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels:  backend-${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -72,8 +72,8 @@ jobs:
         with:
           context: frontend
           push: ${{ github.event_name != 'pull_request' }}
-          tags: frontend-${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: frontend-${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
