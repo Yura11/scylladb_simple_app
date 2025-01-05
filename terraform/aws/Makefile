@@ -1,7 +1,5 @@
-# Define the shell script path
 TERRAGRUNT_RUNNER := ./terragrunt-runner.sh
 
-# Generic Makefile targets
 apply+%+%:
 	@$(TERRAGRUNT_RUNNER) apply $(word 2, $(subst +, ,$@)) $(word 3, $(subst +, ,$@))
 

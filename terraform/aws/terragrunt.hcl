@@ -23,7 +23,7 @@ locals {
   environment = get_env("TERRAGRUNT_ENV", "dev")
   backend_config = local.backend_configs[local.environment]
 
-  root_config = yamldecode(file("${find_in_parent_folders()}/root.yaml"))
+  root_config = yamldecode(file("${get_terragrunt_dir}/root.yaml"))
 
   root_variables = local.root_config
 

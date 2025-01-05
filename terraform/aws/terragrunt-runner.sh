@@ -30,6 +30,10 @@ if [[ ! -f "${TARGET_DIR}/terragrunt.hcl" ]]; then
   exit 1
 fi
 
+# Export the environment variable to match TERRAGRUNT_ENV
+export TERRAGRUNT_ENV="$ENVIRONMENT"
+echo ">>> TERRAGRUNT_ENV set to '${TERRAGRUNT_ENV}'"
+
 # Navigate to the target directory and run the command
 echo ">>> Running 'terragrunt ${COMMAND}' in ${TARGET_DIR}..."
 cd "$TARGET_DIR"

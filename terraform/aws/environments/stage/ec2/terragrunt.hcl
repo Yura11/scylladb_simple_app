@@ -10,13 +10,13 @@ locals {
       dynamodb_table = "terraform-lock-table-dev"
       region         = "us-east-1"
     }
-    staging = {
+    stage= {
       bucket         = "scylladbsimpleappstage"
       key_prefix     = "staging"
       dynamodb_table = "terraform-lock-table-staging"
       region         = "us-east-1"
     }
-    production = {
+    prod = {
       bucket         = "scylladbsimpleappprod"
       key_prefix     = "prod"
       dynamodb_table = "terraform-lock-table-prod"
