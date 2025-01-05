@@ -30,7 +30,11 @@ jobs:
 
     strategy:
       matrix:
-        image: ["frontend", "backend"]
+        include:
+        - image: "frontend"
+          context: "frontend"
+        - image: "backend"
+          context: "backend/skyllago"
 
     steps:
       - name: Checkout repository
@@ -64,38 +68,9 @@ jobs:
         id: build-and-push-image
         uses: docker/build-push-action@0565240e2d4ab88bba5387d719585280857ece09 # v5.0.0
         with:
-          context: frontend
+          context: ${{ matrix.context }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      - name: Sign the published Docker image
-        if: ${{ github.event_name != 'pull_request' }}
-        env:
-          TAGS: ${{ steps.meta.outputs.tags }}
-          DIGEST: ${{ steps.build-and-push-image.outputs.digest }} # Correct step ID
-        run: |
-          echo "Signing the following tags: ${TAGS}"
-          echo "Using digest: ${DIGEST}"
-      
-          # Check if DIGEST and TAGS are non-empty
-          if [[ -z "${DIGEST}" ]]; then
-            echo "ERROR: DIGEST is empty. Ensure the build step produced a valid image digest."
-            exit 1
-          fi
-      
-          if [[ -z "${TAGS}" ]]; then
-            echo "ERROR: TAGS are empty. Ensure metadata-action produced valid tags."
-            exit 1
-          fi
-      
-          # Iterate through tags and sign each
-          echo "${TAGS}" | tr ',' '\n' | while read TAG; do
-            echo "Signing tag: $TAG with digest: $DIGEST"
-            cosign sign --yes "$TAG@$DIGEST" || {
-              echo "ERROR: Failed to sign $TAG@$DIGEST"
-              exit 1
-            }
-          done
