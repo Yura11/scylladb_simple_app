@@ -30,8 +30,11 @@ jobs:
 
     strategy:
       matrix:
-        image: ["frontend", "backend"]
-        context: ["frontend", "backend/skyllago"]
+        include:
+        - image: "frontend"
+          context: "frontend"
+        - image: "backend"
+          context: "backend/skyllago"
 
     steps:
       - name: Checkout repository
