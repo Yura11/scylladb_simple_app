@@ -6,3 +6,5 @@ ami_id: "ami-12345678"
 instance_type: "t2.micro"
 tags:
   environment: "stage"
+subnet_id: "subnet-0704a00197dd73ac9"
+vpc_id: "vpc-09a7683cfff038475"

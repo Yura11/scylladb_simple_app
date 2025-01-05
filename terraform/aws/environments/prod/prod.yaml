@@ -6,3 +6,5 @@ ami_id: "ami-12345678"
 instance_type: "t2.micro"
 tags:
   environment: "prod"
+subnet_id: "subnet-0e0812f4f89e36dd7"
+vpc_id:  "vpc-074f1677f6095ec51"
