@@ -3,10 +3,10 @@ version: "3.8"
 services:
   frontend:
     build:
-      context: ./frontend
+      context: ./frontend/react_js
       dockerfile: ./Dockerfile
     ports:
-      - "4173:80" # Map host port 4173 to container port 80
+      - "4173:80"
     labels:
       - "com.example.project=front"
     networks:
