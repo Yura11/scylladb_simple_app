@@ -68,3 +68,32 @@
     object-fit: contain;
   }
   
+  @media (max-width: 768px) {
+    body {
+      background-color: transparent !important; 
+    }
+    
+    .loginPage {
+      flex-direction: column;
+      width: 100%;
+      height: 90%;
+      padding: 10px;
+      background-color : #ffffff;
+    }
+
+    .formContainer {
+      margin-right: 0; 
+      width: 87%; 
+      box-shadow: none;
+      background-color: #ffffff;
+    }
+
+    .imageContainer {
+      width: 100%; 
+      padding: 10px;
+    }
+
+    .image {
+      max-height: 15.75rem; 
+    }
+  }
